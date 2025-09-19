@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Financial Statement Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>Ultimate Financial Statement Generator</h1>
+            <p class="app-subtitle">Create professional account statements with advanced WhatsApp image sharing</p>
+        </header>
+
+
+        <!-- Enhanced AI Voice Controls Section -->
+        <div class="ai-voice-section" style="margin-bottom: var(--space-24);">
+            <div class="card">
+                <div class="card__body" style="text-align: center;">
+                    <h3 style="margin-bottom: var(--space-16); color: var(--color-primary);">🎙️ Google Gemini AI Voice
+                        Assistant</h3>
+
+                    <div class="ai-controls"
+                        style="display: flex; gap: var(--space-12); justify-content: center; flex-wrap: wrap; margin-bottom: var(--space-16);">
+                        <button id="startVoiceInput" class="btn btn--primary">
+                            🎤 Start Voice Input
+                        </button>
+                        <button id="stopVoiceInput" class="btn btn--secondary" disabled>
+                            ⏹️ Stop Recording
+                        </button>
+                        <button id="manualInput" class="btn btn--outline">
+                            ⌨️ Type Instead
+                        </button>
+                        <button id="clearVoiceData" class="btn btn--outline">
+                            🗑️ Clear Voice Data
+                        </button>
+                    </div>
+
+                    <!-- Manual Input Fallback -->
+                    <div id="manualInputSection" style="display: none; margin-bottom: var(--space-16);">
+                        <textarea id="manualTextInput"
+                            placeholder="Type your transaction details here... (e.g., 'My name is John, debit 5000 rupees for bill payment')"
+                            style="width: 100%; min-height: 80px; padding: var(--space-12); border: 1px solid var(--color-border); border-radius: var(--radius-base); resize: vertical;"></textarea>
+                        <div style="margin-top: var(--space-8);">
+                            <button id="processManualInput" class="btn btn--primary"
+                                style="margin-right: var(--space-8);">🤖 Process with AI</button>
+                            <button id="cancelManualInput" class="btn btn--secondary">❌ Cancel</button>
+                        </div>
+                    </div>
+
+                    <div id="voiceStatus" class="voice-status"
+                        style="font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--space-8);">
+                        Ready to listen... Click "Start Voice Input" or "Type Instead" to begin
+                    </div>
+
+                    <div id="voiceTranscript" class="voice-transcript"
+                        style="background: var(--color-bg-1); padding: var(--space-12); border-radius: var(--radius-base); min-height: 40px; font-style: italic; color: var(--color-text-secondary); display: none;">
+                        <strong>Voice Input:</strong> <span id="transcriptText">Waiting for speech...</span>
+                    </div>
+
+                    <div id="aiProcessing" class="ai-processing"
+                        style="background: linear-gradient(135deg, var(--color-teal-500), var(--color-teal-600)); color: white; padding: var(--space-12); border-radius: var(--radius-base); margin-top: var(--space-12); display: none;">
+                        <strong>🤖 Gemini AI:</strong> <span id="aiResponse">Processing...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Input Form Section -->
+        <div class="form-section card">
+            <div class="card__body">
+                <h2>Add New Entry</h2>
+
+
+
+
+
+
+                <form id="entryForm" class="entry-form">
+                    <div class="form-row form-row-account">
+                        <div class="form-group">
+                            <label for="accountHolder" class="form-label">Account Holder Name</label>
+                            <input type="text" id="accountHolder" class="form-control"
+                                placeholder="Enter account holder name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" id="location" class="form-control" placeholder="Enter location" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="entryDate" class="form-label">Date</label>
+                            <input type="date" id="entryDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="particulars" class="form-label">Particulars</label>
+                            <input type="text" id="particulars" class="form-control"
+                                placeholder="Description of transaction" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="debitAmount" class="form-label">Debit Amount</label>
+                            <input type="number" id="debitAmount" class="form-control" min="0" step="0.01"
+                                placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="creditAmount" class="form-label">Credit Amount</label>
+                            <input type="number" id="creditAmount" class="form-control" min="0" step="0.01"
+                                placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn--primary">Add Entry</button>
+                        <button type="button" id="loadSampleData" class="btn btn--secondary">Load Sample Data</button>
+                        <button type="button" id="clearForm" class="btn btn--outline">Clear Form</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Current Balance Display -->
+        <div class="balance-section">
+            <div class="balance-card card">
+                <div class="card__body">
+                    <h3>Current Balance</h3>
+                    <div class="balance-amount" id="currentBalance">₹0.00</div>
+                    <div class="balance-stats">
+                        <span class="stat">Total Entries: <span id="totalEntries">0</span></span>
+                        <span class="stat">Total Debits: <span id="totalDebitsDisplay">₹0.00</span></span>
+                        <span class="stat">Total Credits: <span id="totalCreditsDisplay">₹0.00</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statement Display Section -->
+        <div class="statement-section card">
+            <div class="card__body">
+                <div class="statement-header">
+                    <h2>ACCOUNT STATEMENTS</h2>
+                    <div class="account-info">
+                        <span id="displayAccountHolder">ACCOUNT HOLDER NAME</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="statement-table">
+                        <thead>
+                            <tr>
+                                <th>DATE</th>
+                                <th>PARTICULARS</th>
+                                <th>DEBIT</th>
+                                <th>CREDIT</th>
+                                <th>BALANCE</th>
+                                <th>ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statementBody">
+                            <tr class="empty-state">
+                                <td colspan="6">No entries yet. Add your first transaction above or load sample data.
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot id="statementFooter" class="hidden">
+                            <tr class="total-row">
+                                <td colspan="2"><strong>TOTAL</strong></td>
+                                <td><strong id="totalDebit">0.00</strong></td>
+                                <td><strong id="totalCredit">0.00</strong></td>
+                                <td><strong id="finalBalance">0.00</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button id="downloadPDF" class="btn btn--primary">
+                        📄 Download PDF
+                    </button>
+                    <button id="shareImageWhatsApp" class="btn btn--primary">
+                        🖼️ Share Image to WhatsApp
+                    </button>
+                    <button id="shareTextWhatsApp" class="btn btn--secondary">
+                        📱 Share Text to WhatsApp
+                    </button>
+                    <button id="shareBothFormats" class="btn btn--secondary">
+                        📱📄 Share Both Formats
+                    </button>
+                    <button id="clearAllData" class="btn btn--outline">
+                        🗑️ Clear All Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Image Generation Container -->
+        <div id="imageGenerationContainer" class="image-generation-container hidden">
+            <div class="statement-image-wrapper">
+                <div class="statement-header-image">
+                    <h2>ACCOUNT STATEMENTS</h2>
+                    <div class="account-info-image">
+                        <span id="displayAccountHolderImage">ACCOUNT HOLDER NAME</span>
+                    </div>
+                </div>
+
+                <table class="statement-table-image">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>PARTICULARS</th>
+                            <th>DEBIT</th>
+                            <th>CREDIT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statementBodyImage">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                    <tfoot id="statementFooterImage">
+                        <tr class="total-row-image">
+                            <td colspan="2"><strong>TOTAL</strong></td>
+                            <td><strong id="totalDebitImage">0.00</strong></td>
+                            <td><strong id="totalCreditImage">0.00</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2025 Ultimate Financial Statement Generator. Professional PDF and image generation with WhatsApp
+                integration.</p>
+        </footer>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" class="message-container hidden"></div>
+
+    <!-- Image Preview Modal -->
+    <div id="imagePreviewModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Statement Image Preview</h3>
+                <button class="modal-close" id="closeImagePreview">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="previewImage" src="" alt="Statement Preview" class="statement-preview-image">
+            </div>
+            <div class="modal-footer">
+                <button id="downloadImage" class="btn btn--primary">Download Image</button>
+                <button id="shareImageNow" class="btn btn--primary">Share to WhatsApp</button>
+                <button id="closePreview" class="btn btn--outline">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
